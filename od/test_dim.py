@@ -1,85 +1,67 @@
 import math
 import cv2
+import time
 import numpy as np
-from gpiozero import AngularServo
+# from gpiozero import AngularServo
 
 
 cap=cv2.VideoCapture(0)
-cap.set(3,640)
-cap.set(4,480)
-cap.set(10,150)
 
-dist = np.sqrt(640**2+480**2)
-ppi = (dist/13.6) 
-d = np.sqrt(22**2+ 28**2)
-dinch = d/ppi
-dcm = dinch*2.54
 
 deg = 57.29577 # def = rad * (180/pi = 57.29277)
-
 arm = 15
 hand = 14
 f_arm = hand + 15 -2
 # position of object
 
 # motor pins
-servo1 = AngularServo(17,min_angle=0, max_angle=270, min_pulse_width=0.0006, max_pulse_width=0.0023)
-servo2 = AngularServo(27,min_angle=0, max_angle=270, min_pulse_width=0.0006, max_pulse_width=0.0023)
-servo3 = AngularServo(22,min_angle=0, max_angle=270, min_pulse_width=0.0006, max_pulse_width=0.0023)
+servo1 = AngularServo(5,min_angle=0, max_angle=270, min_pulse_width=0.0006, max_pulse_width=0.0023)
+servo2 = AngularServo(6,min_angle=0, max_angle=270, min_pulse_width=0.0006, max_pulse_width=0.0023)
+servo3 = AngularServo(13,min_angle=0, max_angle=270, min_pulse_width=0.0006, max_pulse_width=0.0023)
 
 # position of object
 # taking reference point: (22,85)
+x = 22
+y = 85
 
-
-def kinematics(x, y):
+def kinematics():
     # distance of point (x,y) from origin
-    d_pix = np.sqrt((x**2-22**2)+(y**2-85**2)) # pixel distance
-    d_inc = d_pix/ppi # convert to inch
-    D = d_inc * 2.54 # convert to cm
-    print("\nDistance in cm:", D)
+    D = math.sqrt((x**2-22**2)+(y**2-85**2))
+    print(D)
 
-    #------------ dof1 ----------------
-    dof1 = (math.atan2(y, x))*deg
-    print("dof1: ", dof1)
-    
-    
-    #------------ dof2 ----------------
+    dof1 = (math.atan2(y/x))*deg
+
     cos_dof2 = (arm**2 + D **2 - f_arm**2)/(2*arm*D)
-    print("cos_dof2: ",cos_dof2)
     dof2 = (math.acos(cos_dof2))*deg
 
-    #------------ dof3 ----------------
     # sin_dof3 = D * math.sin(dof2)/f_arm
     cos_dof3  = (arm**2 + f_arm **2 - D**2)/(2*arm*f_arm)
-    print("cos_dof3: ",cos_dof3)
     dof3 = (math.acos(cos_dof3))*deg
-    
+
 
     # sin_dof4 = arm * math.sin(dof2)/f_arm
     # cos_dof4 = (D**2 + f_arm**2 - arm**2)/(2*f_arm*D)
     # dof4 = (math.asin(cos_dof4))*deg
 
-    print("\n -------> Applying angles to servos  <---------")
+    print("\n -------> iteration: <---------")
 
-    # time.sleep(2)
+    time.sleep(2)
     print("base motor: dof1: ", dof1)
     servo1.angle = dof1
 
-    # time.sleep(2)
+    time.sleep(2)
     print("shoulder motor: dof2: ", dof2)
     servo2.angle = dof2
 
-    # time.sleep(2)
+    time.sleep(2)
     print("elbow motor: dof3: ", 270-dof3)
     servo3.angle = 270-dof3
-
 
 
 def getContours(masked_img, real_img):
     m_img = np.array(masked_img, np.uint8)
     contours, _= cv2.findContours(m_img, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
     area = 0
-    cx, cy = 0,0
     for cnt in contours:
         area=cv2.contourArea(cnt)
         if area >=900.0:
@@ -102,11 +84,13 @@ def getContours(masked_img, real_img):
 
     
     print("Area: ", area, "\n")
-    print("(cx, cy): (", cx, " , ", cy, " )")
+    print("(cx, cy): (", x, " , ", y, " )")
     x=cx
     y=cy
-    kinematics(x,y)
+    kinematics()
     
+
+
 
 def empty(a):
   pass
@@ -124,7 +108,6 @@ cv2.createTrackbar("Val Max","TrackBars",255,255,empty)
 
 while True:
   success,img=cap.read()
-  img = cv2.flip(img, -1)
   HSV_img=cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
   stak=np.hstack((img,HSV_img))
   h_min=cv2.getTrackbarPos('Hue Min','TrackBars')
