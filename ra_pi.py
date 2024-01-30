@@ -2,6 +2,7 @@ from gpiozero import AngularServo
 import time 
 import math
 
+
 # ---------------- PI-config -------------------
 servo1 = AngularServo(5,min_angle=0, max_angle=270, min_pulse_width=0.0006, max_pulse_width=0.0023)
 servo2 = AngularServo(6,min_angle=0, max_angle=270, min_pulse_width=0.0006, max_pulse_width=0.0023)
@@ -19,6 +20,8 @@ x = 16
 y = 14
 
 
+
+
 # ------------------ Kinematics ----------------------
 def kinematics():
     # distance of point (x,y) from origin
@@ -28,7 +31,7 @@ def kinematics():
     # calculation of DOF
     dof_list = []
 
-    dof1 = (math.atan(y/x))*deg
+    dof1 = (math.atan2(y,x))*deg
     dof_list.append(dof1)
 
     cos_dof2 = (arm**2 + D **2 - f_arm**2)/(2*arm*D)
@@ -43,31 +46,33 @@ def kinematics():
     # sin_dof4 = arm * math.sin(dof2)/f_arm
     # cos_dof4 = (D**2 + f_arm**2 - arm**2)/(2*f_arm*D)
     # dof4 = (math.asin(cos_dof4))*deg
-    dof4 = 180 - dof3 -dof2
+    # dof4 = 180 - dof3 -dof2
 
 
     # print( "D: ",D," dof1: ", dof1," dof2: ", dof2," dof3: ", dof3, " dof4: ", dof4 )
     print(dof_list)
 
-    for i in range(6):
-        print("\n -------> iteration: ", i, " <---------");
+    # for i in range(6):
+    print("\n -------> iteration: <---------")
 
-        time.sleep(2)
-        print("base motor: dof1: ", dof1-i*5)
-        servo1.angle = dof1-i*5
+    time.sleep(2)
+    print("base motor: dof1: ", dof1)
+    servo1.angle = dof1
 
-        time.sleep(2)
-        print("shoulder motor: dof2: ", dof2+i*15)
-        servo2.angle = dof2+i*15
+    time.sleep(2)
+    print("shoulder motor: dof2: ", dof2)
+    servo2.angle = dof2
 
-        time.sleep(2)
-        print("elbow motor: dof3: ", 270-dof3-i*20)
-        servo3.angle = 270-dof3-i*20
+    time.sleep(2)
+    print("elbow motor: dof3: ", 270-dof3)
+    servo3.angle = 270-dof3
 
-try:
-	while True:
-	    kinematics()	
+# try:
+# 	while True:
+# 	    kinematics()	
 		
 
-except KeyboardInterrupt:
-	print("Program stopped")
+# except KeyboardInterrupt:
+# 	print("Program stopped")
+    
+kinematics()
