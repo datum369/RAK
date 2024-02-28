@@ -97,12 +97,16 @@ cv2.imshow("ref_image", ref_image)
 print(Focal_length_found)
 
 
-def kinematics(d_cm):
+def kinematics(dcm):
   
     # d_pix = np.sqrt((x**2-2**2)+(y**2-4**2)) # distance in pixel coordinate
     # d_pixInc = d_pix/ppi # convert to inch
     # Distance from base motor centre to object  in cm
-    d_cm += 12
+    if dcm <13:
+       d_cm = dcm
+    else:
+       d_cm = dcm + 10
+    
     d_sl = np.sqrt((d_cm**2)+(bh**2))  # slated distance from top of base motor to position of object
     print("\nDistance base to object : ", d_cm ," cm")
 
@@ -125,26 +129,29 @@ def kinematics(d_cm):
     dof3_case = (cos_dof3<=1 and cos_dof3>=-1)
     if(dof2_case and dof3_case):
 		
-      dof3 = 180 - (math.acos(cos_dof3))*deg
       dof2 = (math.acos(cos_dof2))*deg
+      dof3 = 180 - (math.acos(cos_dof3))*deg
       
-      # sin_dof4 = arm * math.sin(dof2)/f_arm
-      # cos_dof4 = (D**2 + f_arm**2 - arm**2)/(2*f_arm*D)
-      # dof4 = (math.asin(cos_dof4))*deg
+      bol_dof2 = dof2>0 and dof2<270
+      bol_dof3 = dof3>0 and dof3<270
+      if (bol_dof2 and bol_dof3):
+        # sin_dof4 = arm * math.sin(dof2)/f_arm
+        # cos_dof4 = (D**2 + f_arm**2 - arm**2)/(2*f_arm*D)
+        # dof4 = (math.asin(cos_dof4))*deg
 
-      print("\n -------> Applying angles to servos  <---------")
+        print("\n -------> Applying angles to servos  <---------")
 
-      # time.sleep(2)
-      # print("base motor: dof1: ", dof1)
-      # servo1.angle = dof1
+        # time.sleep(2)
+        # print("base motor: dof1: ", dof1)
+        # servo1.angle = dof1
 
-      # time.sleep(2)
-      print("shoulder motor: dof2: ", dof2)
-      #servo2.angle = dof2
+        # time.sleep(2)
+        print("shoulder motor: dof2: ", dof2)
+        #servo2.angle = dof2
 
-      # time.sleep(2)
-      print("elbow motor: dof3: ", dof3)
-      #servo3.angle = dof3
+        # time.sleep(2)
+        print("elbow motor: dof3: ", dof3)
+        #servo3.angle = dof3
 
     else:
        pass
