@@ -1,13 +1,13 @@
 import math
 import cv2
 import numpy as np
-# from gpiozero import AngularServo
+#from gpiozero import AngularServo
 
 
 cap=cv2.VideoCapture(0)
 cap.set(3,640)
 cap.set(4,480)
-cap.set(10,150)
+#cap.set(10,150)
 
 
 # -------- 
@@ -25,9 +25,9 @@ bh = 10.5 # height of base motor in cm
 
 # position of object
 # motor pins
-# servo1 = AngularServo(17,min_angle=0, max_angle=270, min_pulse_width=0.0006, max_pulse_width=0.0023)
-# servo2 = AngularServo(27,min_angle=0, max_angle=270, min_pulse_width=0.0006, max_pulse_width=0.0023)
-# servo3 = AngularServo(22,min_angle=0, max_angle=270, min_pulse_width=0.0006, max_pulse_width=0.0023)
+#servo1 = AngularServo(17,min_angle=0, max_angle=270, min_pulse_width=0.0006, max_pulse_width=0.0023)
+#servo2 = AngularServo(16,min_angle=0, max_angle=270, min_pulse_width=0.0006, max_pulse_width=0.0023)
+#servo3 = AngularServo(20,min_angle=0, max_angle=270, min_pulse_width=0.0006, max_pulse_width=0.0023)
 
 
 # --------------- distanc setup --------------
@@ -84,8 +84,10 @@ def Distance_finder(Focal_Length, Known_width, obj_width_in_frame):
     distance = (Known_width * Focal_Length)/obj_width_in_frame
     return distance 
 
-path_img = "/Users/eudgen/Desktop/Robotic Arm/RA_code/front_dist_approach/rf.png"
-ref_image = cv2.imread(path_img)
+path_img_pi = "/home/pi/Desktop/our_env/major_project/Bogati/rf.png"
+path_img_mac = "/Users/eudgen/Desktop/Robotic Arm/RA_code/front_dist_approach/rf.png"
+ref_image = cv2.imread(path_img_mac)
+#ref_image = cv2.imread(path_img_pi)
 HSVimg=cv2.cvtColor(ref_image,cv2.COLOR_BGR2HSV)
 mask_img = cv2.inRange(HSVimg,lower,upper)
 ref_image_obj_width = obj_data_1(mask_img)
@@ -100,6 +102,7 @@ def kinematics(d_cm):
     # d_pix = np.sqrt((x**2-2**2)+(y**2-4**2)) # distance in pixel coordinate
     # d_pixInc = d_pix/ppi # convert to inch
     # Distance from base motor centre to object  in cm
+    d_cm += 12
     d_sl = np.sqrt((d_cm**2)+(bh**2))  # slated distance from top of base motor to position of object
     print("\nDistance base to object : ", d_cm ," cm")
 
@@ -111,32 +114,41 @@ def kinematics(d_cm):
     #------------ dof2 ----------------
     cos_dof2 = (arm**2+d_sl**2 - farm**2)/(2*arm*d_sl)
     print("cos_dof2: ",cos_dof2)
-    # dof2 = (math.acos(cos_dof2))*deg
+    
 
     #------------ dof3 ----------------
     # sin_dof3 = D * math.sin(dof2)/f_arm
     cos_dof3  = (arm**2+farm**2-d_sl**2)/(2*arm*farm)
     print("cos_dof3: ",cos_dof3)
-    # dof3 = 180 - (math.acos(cos_dof3))*deg
     
+    dof2_case = (cos_dof2<=1 and cos_dof2>=-1)
+    dof3_case = (cos_dof3<=1 and cos_dof3>=-1)
+    if(dof2_case and dof3_case):
+		
+      dof3 = 180 - (math.acos(cos_dof3))*deg
+      dof2 = (math.acos(cos_dof2))*deg
+      
+      # sin_dof4 = arm * math.sin(dof2)/f_arm
+      # cos_dof4 = (D**2 + f_arm**2 - arm**2)/(2*f_arm*D)
+      # dof4 = (math.asin(cos_dof4))*deg
 
-    # sin_dof4 = arm * math.sin(dof2)/f_arm
-    # cos_dof4 = (D**2 + f_arm**2 - arm**2)/(2*f_arm*D)
-    # dof4 = (math.asin(cos_dof4))*deg
+      print("\n -------> Applying angles to servos  <---------")
 
-    print("\n -------> Applying angles to servos  <---------")
+      # time.sleep(2)
+      # print("base motor: dof1: ", dof1)
+      # servo1.angle = dof1
 
-    # time.sleep(2)
-    # print("base motor: dof1: ", dof1)
-    # servo1.angle = dof1
+      # time.sleep(2)
+      print("shoulder motor: dof2: ", dof2)
+      #servo2.angle = dof2
 
-    # time.sleep(2)
-    # print("shoulder motor: dof2: ", dof2)
-    # servo2.angle = dof2
+      # time.sleep(2)
+      print("elbow motor: dof3: ", dof3)
+      #servo3.angle = dof3
 
-    # time.sleep(2)
-    # print("elbow motor: dof3: ", dof3)
-    # servo3.angle = dof3
+    else:
+       pass
+      
 
 
 
@@ -189,6 +201,7 @@ Distance = 20
 while True:
   success,img=cap.read()
   img = cv2.flip(img, 1)
+  img=cv2.resize(img,(640,480))
   HSV_img=cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
   # stak=np.hstack((img,HSV_img))
   h_min=cv2.getTrackbarPos('Hue Min','TrackBars')
@@ -213,6 +226,5 @@ while True:
   cv2.imshow("FRAME",img)
   if cv2.waitKey(1) & 0xFF==ord('q'):
     break
-
 
 
